@@ -1,0 +1,12 @@
+[Unit]
+Description=Kanata keyboard remapper
+Documentation=https://github.com/jtroo/kanata
+
+[Service]
+Environment=PATH=%h/.cargo/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/sh -c 'exec $$(command -v kanata) --cfg "$${HOME}/.config/kanata/kanata.kbd" --port 127.0.0.1:5829 --no-wait'
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

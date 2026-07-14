@@ -1,0 +1,63 @@
+(defcfg
+  process-unmapped-keys yes
+  movemouse-inherit-accel-state yes
+)
+
+(defsrc
+  esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  spc
+)
+
+(defalias
+  cap  (tap-hold-press 200 200 esc lctl)
+
+  thld (tap-hold-press 200 200 tab (layer-while-held tabnav))
+  tb   (fork @thld tab (lctl rctl caps))
+
+  mon  (layer-switch mouse)
+  moff (layer-switch base)
+
+  ;; tap Right Shift = enter mouse mode
+  ;; hold Right Shift = normal Right Shift
+  rson (tap-hold-press 200 200 @mon rsft)
+
+  ;; in mouse mode:
+  ;; tap Right Shift = exit mouse mode
+  ;; hold Right Shift = temporarily normal keyboard + Shift
+  rsoff (tap-hold-press 200 200 @moff (multi rsft (layer-while-held base)))
+
+  ml (movemouse-accel-left  10 600 3 30)
+  md (movemouse-accel-down  10 600 3 30)
+  mu (movemouse-accel-up    10 600 3 30)
+  mr (movemouse-accel-right 10 600 3 30)
+
+  wu (mwheel-up   50 120)
+  wd (mwheel-down 50 120)
+)
+
+(deflayer base
+  esc  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  @tb  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  @cap a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    @rson
+  spc
+)
+
+(deflayer tabnav
+  _    f1   f2   f3   f4   f5   f6   f7   f8   f9   f10  f11  f12  _
+  _    _    S-9  S-0  S-,  _    home pgup _    end  _    _    _    _
+  _    _    S-[  S-]  S-.  ;    left down up   right _    _    _
+  _    _    [    ]    =    _    _    pgdn _    _    _    _
+  _
+)
+
+(deflayer mouse
+  @moff XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   XX
+  XX    XX   XX   @wd  XX   XX   XX   @wu  XX   XX   XX   XX   XX   XX
+  XX    mlft XX   XX   XX   mmid @ml  @md  @mu  @mr  mrgt XX   XX
+  XX    XX   XX   XX   XX   XX   XX   XX   XX   XX   XX   @rsoff
+  XX
+)

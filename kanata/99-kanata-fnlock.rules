@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="platform", KERNEL=="VPC2004:00", RUN+="/bin/sh -c '/usr/bin/chgrp input /sys$devpath/fn_lock && /usr/bin/chmod g+w /sys$devpath/fn_lock'"
