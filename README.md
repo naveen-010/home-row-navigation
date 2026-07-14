@@ -104,17 +104,17 @@ keyboard with Shift held.
 
 ## Which config should I use?
 
-| | keyd | Kanata |
-| --- | --- | --- |
-| Home-row arrows and navigation | Yes | Yes |
-| F1–F12 layer | Yes | Yes |
-| Tap Caps Lock for Esc, hold for Ctrl | Yes | Yes |
-| Toggleable keyboard mouse | No | Yes |
-| Configuration style | Simple INI-like file | More powerful Lisp-like file |
-| Best for | Most people | People who want mouse mode |
+- **Only want the keyboard shortcuts? Use keyd.** It provides the home-row
+  arrows, navigation keys, F1–F12 layer, and Caps Lock tap/hold behavior. Its
+  config is dead simple to read, understand, and edit—even if you have never
+  used a keyboard remapper before.
+- **Want the keyboard shortcuts plus mouse control from the keyboard? Use
+  Kanata.** It adds the toggleable Right Shift mouse mode, including movement,
+  clicking, and scrolling. The tradeoff is that Kanata's Lisp-like config is
+  unusual, much less friendly, and considerably harder to understand or modify.
 
-Start with **keyd** if all you want is home-row navigation. Choose **Kanata** if
-the Right Shift mouse layer is worth the extra setup.
+In short: choose **keyd** unless you specifically want mouse mode. Kanata is the
+more capable option here, but keyd is by far the easier one to maintain.
 
 ## Requirements
 
