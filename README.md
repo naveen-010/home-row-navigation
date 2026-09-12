@@ -1,364 +1,179 @@
 # Home Row Navigation
 
-System-wide Vim-style arrow keys on Linux—without turning every application into
-Vim.
+System-wide Vim-style navigation, a smarter Caps key, and optional mouse control
+from the home row. Works on Linux with ordinary application shortcuts—no editor
+plugin or modal typing required.
 
-Hold <kbd>Tab</kbd>, then use <kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd>:
+Hold **Tab** and use **H J K L** for **← ↓ ↑ →**. Tap Tab by itself for a normal Tab.
+
+## Features
+
+- Home-row arrows, Home/End, Page Up/Down, F1–F12, and programming symbols.
+- Caps tapped in under **200 ms** sends Escape.
+- Caps used with another key acts as Control; holding it alone and releasing
+  it sends no Escape.
+- **Tab + Caps** toggles actual Caps Lock.
+- Normal **Ctrl + Tab** and **Alt + Tab**.
+- Optional mouse movement, clicks, dragging, and scrolling, toggled with Right Shift.
+- Optional Lenovo IdeaPad Fn-lock light indicating mouse mode.
+
+The motivation is simple: choosing a browser autocomplete suggestion, recalling a
+terminal command, or moving through a form should not require reaching for the
+arrow keys. This setup sends the same ordinary keys those applications already use.
+
+## Two tools, separate responsibilities
 
 ```text
-H  J  K  L
-←  ↓  ↑  →
+Physical keyboard → keyd → keyd virtual keyboard → Kanata → desktop
+                     │                             │
+             Keyboard mappings                Mouse mode
 ```
 
-Your hands stay on the home row in browser address bars, terminals, search
-boxes, autocomplete menus, file pickers, forms, and almost anywhere else that
-already understands arrow keys.
+**keyd owns all keyboard mappings.** Use it alone for navigation and Caps behavior.
+**Kanata adds mouse mode.** Its normal layer passes keyd's output through, except
+for Right Shift's mouse toggle. Kanata is optional, but this Kanata config needs keyd.
 
-This repository contains two versions of the setup:
+The two remappers can run together because their inputs are explicitly separated:
 
-- **keyd** for the small, readable, navigation-only version.
-- **Kanata** for the same navigation layer plus a toggleable keyboard-controlled
-  mouse mode.
+- Kanata reads only `keyd virtual keyboard`.
+- keyd excludes Kanata's output by its **full device ID**.
+- Each daemon runs once. Do not combine the old all-in-one Kanata config with keyd.
 
-> [!IMPORTANT]
-> Use **one remapper at a time**. Running keyd and Kanata together can cause
-> duplicated or confusing remaps.
+The supplied exclusion, `0001:0001:0e03123f`, was verified with Kanata 1.11.0.
+Verify it on your machine before enabling both daemons; the installation guide
+includes a check. Never exclude only `0001:0001`: physical laptop keyboards can
+share that vendor/product pair.
 
-## The idea
+## Shortcuts
 
-The original problem was painfully ordinary: type `goo` into a browser address
-bar and the suggestions appear below—Google, google.com, Gmail, and so on. To
-choose one, the right hand has to leave the home row and reach for arrow keys
-that are awkwardly placed on many keyboards.
+### Keyboard
 
-My first thought was: **I need system-wide Vim.** Press <kbd>Esc</kbd>, use
-<kbd>J</kbd> and <kbd>K</kbd>, then return to insert mode.
+Hold Tab while pressing a key below:
 
-But navigation was the real need, not a full modal editor. Applications already
-know what arrow keys mean. The simpler answer was to put those arrow keys under
-the home row:
+| Keys | Output |
+| --- | --- |
+| H / J / K / L | Left / Down / Up / Right |
+| Y / O | Home / End |
+| U / M | Page Up / Page Down |
+| 1 … 0 | F1 … F10 |
+| - / = | F11 / F12 |
+| W / E | `(` / `)` |
+| S / D | `{` / `}` |
+| X / C | `[` / `]` |
+| R / F | `<` / `>` |
+| G / V | `;` / `=` |
+| Caps | Toggle Caps Lock |
 
-- Browser suggestions: hold <kbd>Tab</kbd> and tap <kbd>J</kbd> or <kbd>K</kbd>.
-- Previous terminal command: <kbd>Tab</kbd> + <kbd>K</kbd>.
-- Accept a right-arrow autocomplete suggestion: <kbd>Tab</kbd> + <kbd>L</kbd>.
-- Move through text, menus, dialogs, and history without leaving the home row.
+Symbols assume US QWERTY. Navigation emits ordinary keycodes and works in browser
+URL bars, terminals, menus, dialogs, and other applications that accept those keys.
 
-There is no mode to enter, no mode to leave, and no application-specific plugin.
-It is just a temporary keyboard layer that emits ordinary arrow keys system-wide.
+| Action | Result |
+| --- | --- |
+| Tap Caps, release before 200 ms | Escape |
+| Hold Caps for 200 ms or longer, release alone | No Escape or typed character |
+| Press another key while Caps is down | Control chord |
+| Press/release Tab alone, even after a long hold | Tab |
+| Hold Tab and press another mapped key | Navigation/symbol layer |
+| Ctrl + Tab / Alt + Tab | Normal application/window switching |
 
-## Shortcut reference
+Control modifier events may occur while Caps is held; “release alone” means no
+Escape or character is sent, not that the input stream contains zero events.
+The 200 ms threshold is local to the Caps binding; Tab has no tap timeout.
 
-### Navigation layer
+### Mouse (optional Kanata layer)
 
-Hold <kbd>Tab</kbd> while pressing any of these keys:
-
-| Shortcut | Output | Shortcut | Output |
-| --- | --- | --- | --- |
-| <kbd>Tab</kbd> + <kbd>H</kbd> | Left arrow | <kbd>Tab</kbd> + <kbd>Y</kbd> | Home |
-| <kbd>Tab</kbd> + <kbd>J</kbd> | Down arrow | <kbd>Tab</kbd> + <kbd>U</kbd> | Page Up |
-| <kbd>Tab</kbd> + <kbd>K</kbd> | Up arrow | <kbd>Tab</kbd> + <kbd>O</kbd> | End |
-| <kbd>Tab</kbd> + <kbd>L</kbd> | Right arrow | <kbd>Tab</kbd> + <kbd>M</kbd> | Page Down |
-| <kbd>Tab</kbd> + <kbd>1</kbd>…<kbd>0</kbd> | F1…F10 | <kbd>Tab</kbd> + <kbd>-</kbd>/<kbd>=</kbd> | F11/F12 |
-
-The layer also keeps common programming symbols nearby:
-
-| Shortcut | Output | Shortcut | Output |
-| --- | --- | --- | --- |
-| <kbd>Tab</kbd> + <kbd>W</kbd>/<kbd>E</kbd> | `(` / `)` | <kbd>Tab</kbd> + <kbd>S</kbd>/<kbd>D</kbd> | `{` / `}` |
-| <kbd>Tab</kbd> + <kbd>X</kbd>/<kbd>C</kbd> | `[` / `]` | <kbd>Tab</kbd> + <kbd>F</kbd> | `>` |
-| <kbd>Tab</kbd> + <kbd>G</kbd> | `;` | <kbd>Tab</kbd> + <kbd>V</kbd> | `=` |
-| <kbd>Tab</kbd> + <kbd>R</kbd> | `<` in Kanata | | |
-
-The symbol mappings assume a US QWERTY layout. The navigation mappings do not
-depend on the characters produced by those symbols.
-
-### Tap/hold keys
-
-| Key | Tap | Hold |
-| --- | --- | --- |
-| <kbd>Tab</kbd> | Tab | Navigation layer |
-| <kbd>Caps Lock</kbd> | Escape | Left Control |
-| <kbd>Right Shift</kbd> (Kanata only) | Toggle mouse mode | Right Shift |
-
-The keyd config explicitly preserves both <kbd>Ctrl</kbd> + <kbd>Tab</kbd> and
-<kbd>Alt</kbd> + <kbd>Tab</kbd>. The Kanata config explicitly preserves
-<kbd>Ctrl</kbd> + <kbd>Tab</kbd>.
-
-### Kanata mouse mode
-
-Tap <kbd>Right Shift</kbd> once to enter mouse mode. Tap it again—or press
-<kbd>Esc</kbd>—to return to the normal keyboard.
+Tap **Right Shift** to enter mouse mode. Tap it again, press **Escape**, or tap
+**Caps** to leave. Right Shift has a 200 ms tap/hold threshold.
 
 | Key | Mouse action |
 | --- | --- |
-| <kbd>H</kbd><kbd>J</kbd><kbd>K</kbd><kbd>L</kbd> | Move left/down/up/right |
-| <kbd>A</kbd> | Left click |
-| <kbd>G</kbd> | Middle click |
-| <kbd>;</kbd> | Right click |
-| <kbd>U</kbd> | Scroll up |
-| <kbd>E</kbd> | Scroll down |
+| H / J / K / L | Move left / down / up / right |
+| A | Left button (hold for dragging) |
+| G | Middle button |
+| ; | Right button |
+| U / E | Scroll up / down |
+| Hold Right Shift | Temporarily restore normal typing with Shift held |
 
-Most other keys are disabled while mouse mode is active, which helps prevent
-accidental typing. Holding <kbd>Right Shift</kbd> temporarily restores the normal
-keyboard with Shift held.
+Other input is suppressed in mouse mode, including navigation/F-key output from
+keyd. Release Right Shift after temporary typing to return to mouse mode.
+Tab + Caps toggles Caps Lock in normal keyboard mode, not in mouse mode.
 
-## Which config should I use?
+## Installation
 
-- **Only want the keyboard shortcuts? Use keyd.** It provides the home-row
-  arrows, navigation keys, F1–F12 layer, and Caps Lock tap/hold behavior. Its
-  config is dead simple to read, understand, and edit—even if you have never
-  used a keyboard remapper before.
-- **Want the keyboard shortcuts plus mouse control from the keyboard? Use
-  Kanata.** It adds the toggleable Right Shift mouse mode, including movement,
-  clicking, and scrolling. The tradeoff is that Kanata's Lisp-like config is
-  unusual, much less friendly, and considerably harder to understand or modify.
+Tested on Linux with **keyd 2.6.0**, **Kanata 1.11.0**, and KDE Plasma Wayland.
+X11 is also supported by the remappers. Linux with systemd and administrator
+access is required for the main installation path.
 
-In short: choose **keyd** unless you specifically want mouse mode. Kanata is the
-more capable option here, but keyd is by far the easier one to maintain.
+1. Install keyd; install Kanata too if you want mouse mode.
+2. Clone the repo and validate the configs.
+3. Use the installer to back up and stage files.
+4. Verify the device exclusion and activate the services.
 
-## Requirements
-
-- Linux. This repository's configs and services are Linux-specific.
-- A US ANSI/QWERTY keyboard for the symbol layer exactly as written.
-- Root access for installing the remapper and input permissions.
-- Python 3 only if you use the optional Fn-lock indicator.
-
-Clone the repository, then choose one setup below:
+**[Full installation, migration, updates, and rollback guide →](docs/install.md)**
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/home-row-navigation.git
+git clone https://github.com/naveen-010/home-row-navigation.git
 cd home-row-navigation
+
+# Preview only; no files or services change.
+bash scripts/install.sh --dry-run
+
+# Stage keyboard + mouse configs and the system service.
+sudo bash scripts/install.sh
+
+# Or stage just the keyboard config:
+sudo bash scripts/install.sh --keyboard-only
 ```
 
-> [!CAUTION]
-> The install commands below replace configs at their destination paths. Back up
-> an existing keyd or Kanata config first if it contains mappings you need.
+The installer does **not** install packages, start/restart remappers, change
+desktop keyboard settings, or install the optional LED helper. Follow the guide
+before activation. Existing destination files are saved under a unique
+`/var/backups/home-row-navigation.*` directory.
 
-## Setup A: keyd (recommended for navigation only)
+Upgrading from the old repository? The guide covers stopping the old user/system
+Kanata instance before using the new `home-row-navigation-mouse.service`.
 
-Install keyd using your distribution package or the
-[official keyd installation instructions](https://github.com/rvaiya/keyd#installation).
-Then install and validate the config:
+## Customization and checks
+
+- Edit keyboard mappings and the Caps threshold in [keyd/default.conf](keyd/default.conf).
+- Edit mouse bindings, acceleration, scrolling, and Right Shift timing in
+  [kanata/kanata.kbd](kanata/kanata.kbd).
+- Keep Kanata's output name and keyd's exclusion in sync.
+- Disable desktop Caps remapping options so Tab + Caps reaches actual Caps Lock.
+  KDE's loaded keymap may need a configuration notification; see the guide.
 
 ```bash
-sudo install -Dm644 keyd/default.conf /etc/keyd/default.conf
-sudo keyd check /etc/keyd/default.conf
-sudo systemctl enable --now keyd
-sudo keyd reload
+bash scripts/check.sh
+bash scripts/check.sh --keyboard-only
+sudo bash scripts/check-device-id.sh /etc/keyd/default.conf
 ```
 
-Check its status and logs:
+The device check needs a running Kanata output device. It reports device
+announcements only, not typed keys. It checks the exclusion, not every possible
+setting in unrelated remapper configs.
 
-```bash
-systemctl status keyd
-sudo journalctl -eu keyd
-```
+## Optional Fn-lock indicator
 
-Changes to the config can be applied with `sudo keyd reload`.
+[Setup instructions →](docs/install.md#optional-lenovo-fn-lock-indicator)
 
-## Setup B: Kanata (navigation + mouse mode)
+The included Python helper observes Kanata's localhost control server and sets
+the Lenovo IdeaPad Fn-lock state while mouse mode is active. This affects the
+**real Fn-lock state and function-key behavior**, not just a cosmetic LED.
+It is specific to `/sys/bus/platform/devices/VPC2004:00/fn_lock`; mouse mode
+works without it.
 
-### 1. Install Kanata
+## Repository layout
 
-Use a binary from the
-[official Kanata releases](https://github.com/jtroo/kanata/releases), your
-distribution package, or Cargo:
-
-```bash
-cargo install kanata
-kanata --version
-```
-
-### 2. Grant Linux input access
-
-Kanata needs access to the `input` and `uinput` subsystems. These commands follow
-the [official Kanata Linux setup](https://github.com/jtroo/kanata/blob/main/docs/setup-linux.md):
-
-```bash
-getent group uinput >/dev/null || sudo groupadd --system uinput
-sudo usermod -aG input,uinput "$USER"
-sudo modprobe uinput
-printf 'uinput\n' | sudo tee /etc/modules-load.d/uinput.conf >/dev/null
-sudo install -Dm644 kanata/99-input.rules /etc/udev/rules.d/99-input.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-```
-
-Log out and back in so the new groups take effect. Verify that `groups` includes
-both `input` and `uinput`, and that `/dev/uinput` is group-writable:
-
-```bash
-groups
-ls -l /dev/uinput
-```
-
-Giving a login user input-device access has security implications: software
-running as that user can potentially observe or inject input. See the official
-Kanata setup guide above before using this on a shared or high-security machine.
-
-### 3. Install the config and user service
-
-```bash
-install -Dm644 kanata/kanata.kbd ~/.config/kanata/kanata.kbd
-install -Dm644 kanata/kanata.service ~/.config/systemd/user/kanata.service
-kanata --check --cfg ~/.config/kanata/kanata.kbd
-systemctl --user daemon-reload
-systemctl --user enable --now kanata.service
-```
-
-Check its status and logs:
-
-```bash
-systemctl --user status kanata.service
-journalctl --user -eu kanata.service
-```
-
-The service binds Kanata's optional control server only to
-`127.0.0.1:5829`. The local Fn-lock indicator below uses it to observe layer
-changes.
-
-## Optional: Fn-lock light as the mouse-mode indicator
-
-The included helper turns the Fn-lock light on while Kanata is in mouse mode and
-off when mouse mode ends. It reproduces the original **Lenovo IdeaPad-specific**
-setup; it is not portable to every keyboard or laptop.
-
-First check whether the expected interface exists:
-
-```bash
-test -e /sys/bus/platform/devices/VPC2004:00/fn_lock \
-  && echo 'Supported Lenovo fn_lock path found' \
-  || echo 'This indicator will not work on this hardware'
-```
-
-If it exists, install the permission rule, helper, and service:
-
-```bash
-sudo install -Dm644 kanata/99-kanata-fnlock.rules \
-  /etc/udev/rules.d/99-kanata-fnlock.rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger --subsystem-match=platform
-
-install -Dm755 kanata/fn-lock-indicator.py \
-  ~/.config/kanata/fn-lock-indicator.py
-install -Dm644 kanata/fn-lock-indicator.service \
-  ~/.config/systemd/user/fn-lock-indicator.service
-systemctl --user daemon-reload
-systemctl --user enable --now fn-lock-indicator.service
-```
-
-This controls the laptop's real Fn-lock state, not just the light. Function-key
-behavior is therefore locked while mouse mode is active. Mouse mode itself works
-without this optional helper.
-
-## Switching between keyd and Kanata
-
-From Kanata to keyd:
-
-```bash
-systemctl --user disable --now kanata.service
-sudo systemctl enable --now keyd
-```
-
-From keyd to Kanata:
-
-```bash
-sudo systemctl disable --now keyd
-systemctl --user enable --now kanata.service
-```
-
-## Frequently asked questions
-
-### How do I use arrow keys without leaving the home row?
-
-Hold <kbd>Tab</kbd> and press <kbd>H</kbd>, <kbd>J</kbd>, <kbd>K</kbd>, or
-<kbd>L</kbd> for left, down, up, or right. The remapper sends normal arrow-key
-events, so the shortcut works system-wide rather than only inside an editor.
-
-### Can I get Vim navigation system-wide on Linux?
-
-Yes, if by “Vim navigation” you mainly mean HJKL arrow movement. A keyboard layer
-is simpler than making every application modal: <kbd>Tab</kbd> + HJKL works in
-browsers, terminals, menus, text fields, and other applications that accept
-arrow keys.
-
-### Why not use a full system-wide Vim mode?
-
-Full Vim behavior needs concepts such as normal mode, insert mode, text objects,
-and application-aware editing. For selecting a browser suggestion or recalling a
-terminal command, that adds transitions without adding value. This setup solves
-the smaller problem directly by relocating the existing arrow keys.
-
-### Does the Tab key still work normally?
-
-Yes. Tap Tab to send a normal Tab; hold it with another mapped key to activate
-the navigation layer. The configs also account for common Tab shortcuts as noted
-in the tap/hold section above.
-
-### Does this work in browser URL bars and autocomplete menus?
-
-Yes. Those interfaces already respond to arrow keys, and the layer emits ordinary
-arrow events. For example, type `goo`, then use <kbd>Tab</kbd> + <kbd>J</kbd> to
-move down through suggestions and <kbd>Tab</kbd> + <kbd>K</kbd> to move back up.
-
-### Does this work in a terminal?
-
-Yes. <kbd>Tab</kbd> + <kbd>K</kbd> sends Up to recall the previous command,
-<kbd>Tab</kbd> + <kbd>J</kbd> sends Down, and <kbd>Tab</kbd> + <kbd>L</kbd> sends
-Right to accept autocomplete behavior supported by your shell—without entering
-and leaving a Vim editing mode.
-
-### What is the difference between keyd, Kanata, and KMonad?
-
-These files use **keyd** and **Kanata**. The advanced config may be easy to
-misremember as KMonad because both tools use Lisp-like configuration, but the
-actual tool here is Kanata. keyd is the easier choice for this small navigation
-layer; Kanata powers the toggleable mouse layer.
-
-### Can I use the keyboard as a mouse?
-
-With the Kanata config, yes. Tap Right Shift to toggle mouse mode, use HJKL to
-move, A/G/semicolon to click, and U/E to scroll. Tap Right Shift again or press
-Escape to leave mouse mode.
-
-### Will the Fn-lock light indicate mouse mode on every computer?
-
-No. The included LED helper targets the Lenovo IdeaPad interface at
-`/sys/bus/platform/devices/VPC2004:00/fn_lock`. Other devices need a different
-hardware-specific indicator, but the keyboard mouse still works without one.
-
-## Troubleshooting and emergency exits
-
-- Validate before restarting: `keyd check keyd/default.conf` or
-  `kanata --check --cfg kanata/kanata.kbd`.
-- If keyd traps the keyboard because of a bad config, press
-  <kbd>Backspace</kbd> + <kbd>Escape</kbd> + <kbd>Enter</kbd> to terminate it.
-- Kanata's emergency exit is <kbd>Left Ctrl</kbd> + <kbd>Space</kbd> +
-  <kbd>Escape</kbd>.
-- If keys fire twice or behave strangely, make sure only one remapper is active.
-- If Kanata cannot open input devices, confirm the new groups are active after a
-  full logout/login and inspect `ls -l /dev/uinput`.
-- If programming symbols are wrong, adapt the shifted symbol bindings for your
-  keyboard layout; the supplied mappings assume US QWERTY.
-- If the mouse works but its light does not, that is an indicator compatibility
-  issue, not a Kanata mouse-layer failure.
-
-## Files
-
-```text
-.
-├── keyd/
-│   └── default.conf
-├── kanata/
-│   ├── 99-input.rules
-│   ├── 99-kanata-fnlock.rules
-│   ├── fn-lock-indicator.py
-│   ├── fn-lock-indicator.service
-│   ├── kanata.kbd
-│   └── kanata.service
-└── README.md
-```
-
-The two main config files are snapshots of the working local setup. The included
-Kanata user service avoids hard-coded usernames, while the optional LED helper
-retains the original Lenovo-specific behavior.
+| Path | Purpose |
+| --- | --- |
+| `keyd/default.conf` | All keyboard mappings and Kanata output exclusion |
+| `kanata/kanata.kbd` | Mouse layer and keyd input filter |
+| `kanata/home-row-navigation-mouse.service` | Main system service, ordered after keyd |
+| `scripts/install.sh` | Validate, back up, and stage files; supports dry run |
+| `scripts/check.sh` | Config validators and shell syntax checks |
+| `scripts/check-device-id.sh` | Verify the Kanata output exclusion |
+| `docs/install.md` | Installation, migration, KDE fix, troubleshooting, rollback |
+| `kanata/fn-lock-indicator.*` | Optional Lenovo helper and user service |
+| `kanata/99-kanata-fnlock.rules` | Optional Fn-lock write permission |
+| `kanata/kanata.service`, `kanata/99-input.rules` | Alternative user-service setup |
+| `kanata/keyd-ordering.conf` | Drop-in for an existing system Kanata service |

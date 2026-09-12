@@ -1,7 +1,7 @@
 [Unit]
 Description=Fn-lock LED indicator for Kanata mouse mode
-After=kanata.service
-Wants=kanata.service
+# The mouse daemon is a SYSTEM service. Do not start a second user Kanata.
+# The helper retries until the localhost control server becomes available.
 
 [Service]
 ExecStart=/usr/bin/python3 %h/.config/kanata/fn-lock-indicator.py

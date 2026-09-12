@@ -1,0 +1,14 @@
+[Unit]
+Description=Home Row Navigation mouse layer (Kanata after keyd)
+Documentation=https://github.com/naveen-010/home-row-navigation
+Requires=keyd.service
+After=keyd.service
+
+[Service]
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/env kanata --cfg /etc/kanata/home-row-navigation.kbd --port 127.0.0.1:5829 --no-wait
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
